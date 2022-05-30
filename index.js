@@ -1,33 +1,33 @@
 const express = require("express");
-const app = express();
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+require("dotenv").config()
 
-const path = require("path");
-const logger = require("morgan");
 const cors = require("cors");
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+const app = express();
 app.use(cors());
 
-app.get("/api/test", (req, res) => {
-  res.send("test");
-});
+//import your models
+require("./models/quote");
 
-app.use(express.static(path.join(__dirname, "./frontend/build")));
-
-app.get("*", function (_, res) {
-  res.sendFile(
-    path.join(__dirname, "./frontend/build/index.html"),
-    function (err) {
-      if (err) {
-        res.status(500).send(err);
-      }
+mongoose
+  .connect(process.env.MONGODB_CONNECTION_STRING,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     }
-  );
+  )
+  .then(() => console.log("MongoDB has been connected"))
+  .catch((err) => console.log(err));
+
+const path = require("path");
+
+// Step 1:
+app.use(express.static(path.resolve(__dirname, "./frontend/build")));
+// Step 2:
+app.get("*", function (request, response) {
+  response.sendFile(path.resolve(__dirname, "./frontend/build", "index.html"));
 });
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => console.log(`Server Running on port ${port}`));
-
-module.exports = app;
+const PORT = process.env.PORT || 5000;
